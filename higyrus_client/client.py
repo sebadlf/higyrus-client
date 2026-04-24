@@ -30,7 +30,7 @@ from dotenv import load_dotenv
 
 from ._params import drop_none, format_bool, format_date
 from .exceptions import AuthenticationError, AuthorizationError, HigyrusAPIError
-from .models import Movimiento, Posicion
+from .models import Movimiento, Posicion, PosicionValuada
 
 load_dotenv()
 
@@ -262,6 +262,78 @@ def get_movimientos(
         return []
     assert isinstance(raw, list)
     return [Movimiento.from_api(item) for item in raw]
+
+
+def get_posicion_valuada(
+    id_cuenta: str,
+    tipo_cuenta: str,
+    nivel: str,
+    desde: date | datetime | str,
+    hasta: date | datetime | str,
+    *,
+    lugar: str | None = None,
+    estado: str | None = None,
+    tipo_titulo: str | None = None,
+    extracto: str | None = None,
+    ocultar_cerradas: bool | None = None,
+    especie: str | None = None,
+    concertacion: bool | None = None,
+    actualizar: bool | None = None,
+) -> list[PosicionValuada]:
+    """Return the valued position rows of an account over a date range.
+
+    Hits ``GET /api/cuentas/{id_cuenta}/posicionValuada`` — see
+    ``documentation/higyrus-docs.pdf`` pp. 49-52. Requires the Higyrus
+    permission ``[API] Consulta de posición valuada``.
+
+    Args:
+        id_cuenta: Account identifier.
+        tipo_cuenta: Account type (valores a documentar contra sandbox).
+        nivel: Aggregation / detail level (valores a documentar contra
+            sandbox).
+        desde: Start of the date range, ``dd/mm/yyyy`` formatting or
+            passthrough string.
+        hasta: End of the date range, same semantics.
+        lugar: Optional venue filter.
+        estado: Optional state filter.
+        tipo_titulo: Optional security type filter.
+        extracto: Optional statement identifier filter.
+        ocultar_cerradas: If provided, serialized as ``"True"``/``"False"``;
+            left unset (``None``) the server default applies.
+        especie: Optional species filter.
+        concertacion: Tri-state flag (``None`` → omitted).
+        actualizar: Tri-state flag (``None`` → omitted).
+
+    Returns:
+        A list of :class:`~higyrus_client.models.PosicionValuada`. Empty
+        list when the API returns ``204 No Content``. The spec documents
+        the successful status as ``201``, which is accepted transparently
+        by :func:`_request` (it trusts ``resp.ok``).
+
+    Raises:
+        AuthenticationError: ``401`` from the API.
+        AuthorizationError: ``403`` from the API.
+        HigyrusAPIError: Any other non-2xx response.
+    """
+    raw = _get(
+        f"/api/cuentas/{id_cuenta}/posicionValuada",
+        tipoCuenta=tipo_cuenta,
+        nivel=nivel,
+        desde=format_date(desde),
+        hasta=format_date(hasta),
+        lugar=lugar,
+        estado=estado,
+        tipoTitulo=tipo_titulo,
+        extracto=extracto,
+        ocultarCerradas=format_bool(ocultar_cerradas),
+        especie=especie,
+        concertacion=format_bool(concertacion),
+        actualizar=format_bool(actualizar),
+    )
+    if raw is None:
+        return []
+    assert isinstance(raw, list)
+    return [PosicionValuada.from_api(item) for item in raw]
 
 
 def get_posiciones(

@@ -8,9 +8,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from higyrus_client.client import get_movimientos, get_posiciones
+from higyrus_client.client import get_movimientos, get_posicion_valuada, get_posiciones
 from higyrus_client.exceptions import AuthorizationError, HigyrusAPIError
-from higyrus_client.models import Movimiento, Posicion
+from higyrus_client.models import Movimiento, Posicion, PosicionValuada
 from tests.conftest import build_response
 
 
@@ -37,6 +37,31 @@ def _movimiento_payload(**overrides: Any) -> dict[str, Any]:
         "factorizacion": "",
         "concepto": "OP",
         "idMovimientos": [101, 102],
+    }
+    base.update(overrides)
+    return base
+
+
+def _posicion_valuada_payload(**overrides: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "cuenta": "123",
+        "operador": "op1",
+        "unidad": "ARS",
+        "lugar": "BYMA",
+        "estado": "vigente",
+        "uso": "",
+        "fecha": "2026-04-15T15:30:00.000Z",
+        "comprobante": "BO-001",
+        "informacion": "",
+        "cantidad": 100,
+        "fechaCotizacion": "23/04/2026",
+        "precio": 150.0,
+        "valuacion": 15000.0,
+        "administrador": "admin",
+        "cartera": "cart1",
+        "mercado": "BYMA",
+        "segmento": "CPA",
+        "sesion": "PRIN",
     }
     base.update(overrides)
     return base
@@ -208,6 +233,230 @@ def test_get_movimientos_400_raises_base_error(
 
     with pytest.raises(HigyrusAPIError) as exc:
         get_movimientos("X", date(2026, 4, 1), date(2026, 4, 23))
+
+    assert exc.value.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# get_posicion_valuada
+# ---------------------------------------------------------------------------
+
+
+def test_get_posicion_valuada_happy_path(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload=[_posicion_valuada_payload(), _posicion_valuada_payload(cuenta="456")],
+        status_code=200,
+    )
+
+    result = get_posicion_valuada(
+        "123",
+        tipo_cuenta="COMITENTE",
+        nivel="DETALLE",
+        desde=date(2026, 4, 1),
+        hasta=date(2026, 4, 23),
+    )
+
+    assert len(result) == 2
+    assert all(isinstance(p, PosicionValuada) for p in result)
+    assert result[0].valuacion == 15000.0
+    assert result[1].cuenta == "456"
+
+
+def test_get_posicion_valuada_accepts_201_status(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # The PDF lists success as HTTP 201 on a GET (doc inconsistency).
+    # _request trusts resp.ok, so any 2xx is accepted transparently.
+    mock_session.request.return_value = build_response(
+        payload=[_posicion_valuada_payload()],
+        status_code=201,
+    )
+
+    result = get_posicion_valuada(
+        "X",
+        "COMITENTE",
+        "DETALLE",
+        date(2026, 4, 1),
+        date(2026, 4, 23),
+    )
+
+    assert len(result) == 1
+
+
+def test_get_posicion_valuada_204_returns_empty_list(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(status_code=204)
+
+    result = get_posicion_valuada(
+        "X",
+        "COMITENTE",
+        "DETALLE",
+        date(2026, 4, 1),
+        date(2026, 4, 23),
+    )
+
+    assert result == []
+
+
+def test_get_posicion_valuada_url_and_minimal_params(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_posicion_valuada(
+        "ABC-9",
+        tipo_cuenta="COMITENTE",
+        nivel="DETALLE",
+        desde=date(2026, 1, 5),
+        hasta=date(2026, 4, 23),
+    )
+
+    call = mock_session.request.call_args
+    assert call.args == ("GET", "https://api.test/api/cuentas/ABC-9/posicionValuada")
+    # Optional params not passed → dropped entirely; no default bools sent.
+    assert call.kwargs["params"] == {
+        "tipoCuenta": "COMITENTE",
+        "nivel": "DETALLE",
+        "desde": "05/01/2026",
+        "hasta": "23/04/2026",
+    }
+
+
+def test_get_posicion_valuada_translates_all_optional_kwargs(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_posicion_valuada(
+        "X",
+        "COMITENTE",
+        "DETALLE",
+        date(2026, 4, 1),
+        date(2026, 4, 23),
+        lugar="BYMA",
+        estado="vigente",
+        tipo_titulo="Accion",
+        extracto="EXT-1",
+        ocultar_cerradas=True,
+        especie="YPFD",
+        concertacion=False,
+        actualizar=True,
+    )
+
+    params = mock_session.request.call_args.kwargs["params"]
+    assert params["lugar"] == "BYMA"
+    assert params["estado"] == "vigente"
+    assert params["tipoTitulo"] == "Accion"
+    assert params["extracto"] == "EXT-1"
+    assert params["ocultarCerradas"] == "True"
+    assert params["especie"] == "YPFD"
+    assert params["concertacion"] == "False"
+    assert params["actualizar"] == "True"
+
+
+def test_get_posicion_valuada_bool_none_is_dropped(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # Tri-state bools: None must not be sent (server default applies).
+    # Distinguishes from False, which explicitly forces the flag off.
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_posicion_valuada(
+        "X",
+        "COMITENTE",
+        "DETALLE",
+        date(2026, 4, 1),
+        date(2026, 4, 23),
+        ocultar_cerradas=False,
+    )
+
+    params = mock_session.request.call_args.kwargs["params"]
+    assert params["ocultarCerradas"] == "False"
+    assert "concertacion" not in params
+    assert "actualizar" not in params
+
+
+def test_get_posicion_valuada_accepts_string_fechas(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_posicion_valuada("X", "COMITENTE", "DETALLE", "01/04/2026", "23/04/2026")
+
+    params = mock_session.request.call_args.kwargs["params"]
+    assert params["desde"] == "01/04/2026"
+    assert params["hasta"] == "23/04/2026"
+
+
+def test_get_posicion_valuada_partial_payload_uses_safe_defaults(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # Missing optional fields → SafeModel defaults, no crash on chaining.
+    payload = _posicion_valuada_payload()
+    for key in ("administrador", "cartera", "mercado", "segmento", "sesion"):
+        del payload[key]
+    mock_session.request.return_value = build_response(payload=[payload], status_code=200)
+
+    result = get_posicion_valuada(
+        "X",
+        "COMITENTE",
+        "DETALLE",
+        date(2026, 4, 1),
+        date(2026, 4, 23),
+    )
+
+    assert result[0].administrador == ""
+    assert result[0].cartera == ""
+    assert result[0].valuacion == 15000.0  # still present
+
+
+def test_get_posicion_valuada_403_raises_authorization_error(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload={"errors": [{"title": "forbidden", "detail": "missing permission"}]},
+        status_code=403,
+    )
+
+    with pytest.raises(AuthorizationError):
+        get_posicion_valuada(
+            "X",
+            "COMITENTE",
+            "DETALLE",
+            date(2026, 4, 1),
+            date(2026, 4, 23),
+        )
+
+
+def test_get_posicion_valuada_400_raises_base_error(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload={"errors": [{"title": "bad_request", "detail": "nivel inválido"}]},
+        status_code=400,
+    )
+
+    with pytest.raises(HigyrusAPIError) as exc:
+        get_posicion_valuada(
+            "X",
+            "COMITENTE",
+            "DETALLE",
+            date(2026, 4, 1),
+            date(2026, 4, 23),
+        )
 
     assert exc.value.status_code == 400
 
