@@ -27,6 +27,7 @@ from typing import Any
 import requests as _requests
 from dotenv import load_dotenv
 
+from ._params import drop_none
 from .exceptions import AuthenticationError, AuthorizationError, HigyrusAPIError
 
 load_dotenv()
@@ -153,7 +154,7 @@ def _request(
     resp = _session.request(
         method,
         url,
-        params=_drop_none(params) if params else None,
+        params=drop_none(params) if params else None,
         json=json_body,
         headers={"Authorization": f"Bearer {_token}"},
         timeout=_REQUEST_TIMEOUT,
@@ -166,11 +167,6 @@ def _request(
         return None
 
     return resp.json()
-
-
-def _drop_none(params: dict[str, Any]) -> dict[str, Any]:
-    """Return ``params`` without keys whose value is ``None``."""
-    return {k: v for k, v in params.items() if v is not None}
 
 
 def _get(path: str, **params: Any) -> dict[str, Any] | list[Any] | None:
