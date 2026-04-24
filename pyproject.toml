@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "higyrus-client"
+version = "0.1.0"
+description = "Python client for the Higyrus API (financial operations)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+    { name = "Sebastián de la Fuente", email = "sebadlf@gmail.com" },
+]
+keywords = [
+    "higyrus",
+    "fintech",
+    "argentina",
+    "api-client",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Typing :: Typed",
+]
+dependencies = [
+    "python-dotenv>=1.2.2",
+    "requests>=2.32.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/sebadlf/higyrus-client"
+Repository = "https://github.com/sebadlf/higyrus-client"
+Issues = "https://github.com/sebadlf/higyrus-client/issues"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.380",
+    "pytest>=8.3.0",
+    "ruff>=0.11.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["higyrus_client"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "higyrus_client",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+exclude = [
+    "higyrus-vault",
+    "documentation",
+    "tests",
+    ".github",
+    ".claude",
+    "main*.py",
+    "*.ipynb",
+    ".env*",
+    "dist",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.pyright]
+include = ["higyrus_client", "tests"]
+exclude = [".venv", "higyrus-vault", "documentation", "__pycache__"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+reportMissingImports = "error"
+reportMissingTypeStubs = "none"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "higyrus-vault", "documentation"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "N",    # pep8-naming
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
