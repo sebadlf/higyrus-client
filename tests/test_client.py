@@ -51,6 +51,34 @@ def test_login_missing_credentials_raises(
         _client.login()
 
 
+def test_login_accepts_empty_client_id(
+    mock_session: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Single-tenant installations don't require HIGYRUS_CLIENT_ID. The
+    # client must tolerate an empty string and still send the field in
+    # the body so the server sees a consistent shape.
+    monkeypatch.setattr(_client, "_base_url", "https://api.test")
+    monkeypatch.setattr(_client, "_client_id", "")
+    monkeypatch.setattr(_client, "_user", "test-user")
+    monkeypatch.setattr(_client, "_password", "test-pass")
+    monkeypatch.setattr(_client, "_token", None)
+    mock_session.post.return_value = build_response(
+        payload={"username": "test-user", "token": "new-token"},
+        status_code=200,
+    )
+
+    token = _client.login()
+
+    assert token == "new-token"
+    sent_body = mock_session.post.call_args.kwargs["json"]
+    assert sent_body == {
+        "clientId": "",
+        "username": "test-user",
+        "password": "test-pass",
+    }
+
+
 def test_login_missing_base_url_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_client, "_base_url", "")
     monkeypatch.setattr(_client, "_token", None)
