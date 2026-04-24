@@ -13,6 +13,7 @@ See the README and the in-module docstrings for usage details.
 from .client import (
     get_health,
     get_movimientos,
+    get_posicion_valuada,
     get_posiciones,
     login,
 )
@@ -25,6 +26,7 @@ from .models import (
     Movimiento,
     Parking,
     Posicion,
+    PosicionValuada,
     SafeModel,
 )
 
@@ -38,10 +40,12 @@ __all__ = [
     "login",
     # Cuentas
     "get_movimientos",
+    "get_posicion_valuada",
     "get_posiciones",
     # Models
     "Movimiento",
     "Parking",
     "Posicion",
+    "PosicionValuada",
     "SafeModel",
 ]

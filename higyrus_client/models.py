@@ -90,6 +90,42 @@ def _coerce(value: Any, hint: Any) -> Any:
 
 
 @dataclass(frozen=True, slots=True)
+class PosicionValuada(SafeModel):
+    """Valued position row returned by ``GET /api/cuentas/{idCuenta}/posicionValuada``.
+
+    See ``documentation/higyrus-docs.pdf`` pp. 49-52. Shape-compatible with
+    the multi-account endpoint ``POST /api/cuentas/posicionValuada``.
+
+    Note: the PDF renders some response keys with Spanish accents
+    (``información``, ``fechaCotización``, ``valuación``, ``sesión``),
+    which is inconsistent with every other endpoint in the spec (where
+    keys are ASCII: ``informacion``, ``fechaPrecio``, ``precioUnitario``).
+    We treat the accents as a doc/OCR artifact and mirror the rest of the
+    API. If the live service actually emits accented keys, add a second
+    pass of aliases in ``from_api`` — do not rename these fields.
+    """
+
+    cuenta: str
+    operador: str
+    unidad: str
+    lugar: str
+    estado: str
+    uso: str
+    fecha: str
+    comprobante: str
+    informacion: str
+    cantidad: int
+    fechaCotizacion: str
+    precio: float
+    valuacion: float
+    administrador: str
+    cartera: str
+    mercado: str
+    segmento: str
+    sesion: str
+
+
+@dataclass(frozen=True, slots=True)
 class Parking(SafeModel):
     """Parking entry nested inside a :class:`Posicion`.
 

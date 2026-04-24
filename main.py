@@ -41,6 +41,21 @@ def main() -> None:
     #         f"  {mov.fecha[:10]} {mov.tipoOperacion:<8} "
     #         f"{mov.especie:<10} cant={mov.cantidad:>8}  val={mov.valuacion}"
     #     )
+    #
+    # valuada = higyrus.get_posicion_valuada(
+    #     "REEMPLAZAR_ID_CUENTA",
+    #     tipo_cuenta="REEMPLAZAR_TIPO_CUENTA",
+    #     nivel="REEMPLAZAR_NIVEL",
+    #     desde=date.today().replace(day=1),
+    #     hasta=date.today(),
+    # )
+    # print(f"{len(valuada)} posiciones valuadas")
+    # for row in valuada[:5]:
+    #     print(
+    #         f"  {row.especie if hasattr(row, 'especie') else '':<10} "
+    #         f"cant={row.cantidad:>8}  precio={row.precio:>10}  "
+    #         f"val={row.valuacion}"
+    #     )
     _ = date  # silence unused-import when the examples are commented
 
 
