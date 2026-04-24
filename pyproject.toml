@@ -99,6 +99,11 @@ ignore = [
     "E501",  # line too long (handled by formatter)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Safe-access models mirror the Higyrus API wire format (camelCase) verbatim
+# so JSON payloads map 1:1 onto dataclass fields.
+"higyrus_client/models.py" = ["N815"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
