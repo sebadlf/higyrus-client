@@ -57,7 +57,7 @@ Key concepts:
 
 ## External References
 
-- **Linear team**: `Becerra` (prefix `BEC`). Use the Linear MCP to read/create/update issues.
+- **Linear team**: `Becerra` (prefix `BEC`). Issues for this repo belong to the `Higyrus Client` project (https://linear.app/gravity-code/project/higyrus-client-4936c5ae7a62). Use the Linear MCP to read/create/update issues — always set `project` to `Higyrus Client` when creating issues for this repo, to keep them separate from `Matriz Client` and `AI Pipeline`.
 - **Obsidian vault**: `./higyrus-vault/` — accessible via the `obsidian` MCP server. Contains:
   - `projects/higyrus-client/` — project-specific notes (domain, ADRs, runbooks)
   - `knowledge/` — cross-project knowledge (Python, architecture, tools)
