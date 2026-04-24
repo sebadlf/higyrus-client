@@ -30,7 +30,7 @@ from dotenv import load_dotenv
 
 from ._params import drop_none, format_bool, format_date
 from .exceptions import AuthenticationError, AuthorizationError, HigyrusAPIError
-from .models import Posicion
+from .models import Movimiento, Posicion
 
 load_dotenv()
 
@@ -210,6 +210,58 @@ def get_health() -> dict[str, Any]:
 # ------------------------------------------------------------------
 # Cuentas
 # ------------------------------------------------------------------
+
+
+def get_movimientos(
+    id_cuenta: str,
+    fecha_desde: date | datetime | str,
+    fecha_hasta: date | datetime | str,
+    *,
+    especie: str | None = None,
+    tipo_titulo: str | None = None,
+    tipo_titulo_agente: str | None = None,
+    movimiento: str | None = None,
+) -> list[Movimiento]:
+    """Return the movements of an account over a date range.
+
+    Hits ``GET /api/cuentas/{id_cuenta}/movimientos`` — see
+    ``documentation/higyrus-docs.pdf`` pp. 26-30. Requires the Higyrus
+    permission ``[API] Cuenta - Consulta de movimientos de una cuenta a
+    partir de una fecha``.
+
+    Args:
+        id_cuenta: Account identifier to query.
+        fecha_desde: Start of the date range (inclusive). ``date`` /
+            ``datetime`` are formatted as ``dd/mm/yyyy``; strings are
+            passed through untouched.
+        fecha_hasta: End of the date range (inclusive), same semantics.
+        especie: Optional species filter.
+        tipo_titulo: Optional security type filter.
+        tipo_titulo_agente: Optional agent-side security type filter.
+        movimiento: Optional movement type filter.
+
+    Returns:
+        A list of :class:`~higyrus_client.models.Movimiento`. Empty list
+        when the API returns ``204 No Content``.
+
+    Raises:
+        AuthenticationError: ``401`` from the API (token missing/invalid).
+        AuthorizationError: ``403`` from the API (caller lacks permission).
+        HigyrusAPIError: Any other non-2xx response.
+    """
+    raw = _get(
+        f"/api/cuentas/{id_cuenta}/movimientos",
+        fechaDesde=format_date(fecha_desde),
+        fechaHasta=format_date(fecha_hasta),
+        especie=especie,
+        tipoTitulo=tipo_titulo,
+        tipoTituloAgente=tipo_titulo_agente,
+        movimiento=movimiento,
+    )
+    if raw is None:
+        return []
+    assert isinstance(raw, list)
+    return [Movimiento.from_api(item) for item in raw]
 
 
 def get_posiciones(

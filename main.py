@@ -29,7 +29,19 @@ def main() -> None:
     #         f"  {pos.especie:<10} cant={pos.cantidadLiquidada:>8}  "
     #         f"precio={pos.precio:>10}  disp={pos.disponibleAjustado}"
     #     )
-    _ = date  # silence unused-import when the example is commented
+    #
+    # movimientos = higyrus.get_movimientos(
+    #     "REEMPLAZAR_ID_CUENTA",
+    #     fecha_desde=date.today().replace(day=1),
+    #     fecha_hasta=date.today(),
+    # )
+    # print(f"{len(movimientos)} movimientos en el mes")
+    # for mov in movimientos[:5]:
+    #     print(
+    #         f"  {mov.fecha[:10]} {mov.tipoOperacion:<8} "
+    #         f"{mov.especie:<10} cant={mov.cantidad:>8}  val={mov.valuacion}"
+    #     )
+    _ = date  # silence unused-import when the examples are commented
 
 
 if __name__ == "__main__":
