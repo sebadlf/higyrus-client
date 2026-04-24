@@ -26,7 +26,7 @@ Cliente Python para la **API de Higyrus** — API REST para operaciones financie
 
 ## Decisiones
 
-_Pendientes. Al tomar una decisión arquitectónica, registrar en `decisions/` usando el template `tpl-adr`._
+- [[ADR-001 — Modelos safe-access]] — por qué el cliente expone frozen dataclasses con `from_api()` en vez de dicts crudos o Pydantic.
 
 ## Notas de dominio
 

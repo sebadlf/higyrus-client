@@ -19,6 +19,11 @@ from .exceptions import (
     AuthorizationError,
     HigyrusAPIError,
 )
+from .models import (
+    Parking,
+    Posicion,
+    SafeModel,
+)
 
 __all__ = [
     # Exceptions
@@ -28,4 +33,8 @@ __all__ = [
     # Auth / health
     "get_health",
     "login",
+    # Models
+    "Parking",
+    "Posicion",
+    "SafeModel",
 ]
