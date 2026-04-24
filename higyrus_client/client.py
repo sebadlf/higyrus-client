@@ -195,20 +195,20 @@ def _patch(
 
 
 # ------------------------------------------------------------------
-# Health  (no auth required)
+# Health
 # ------------------------------------------------------------------
 
 
 def get_health() -> dict[str, Any]:
-    """Return the server status. Hits ``GET /api/health``.
+    """Return the server status via ``GET /api/health``.
 
-    Does not require authentication.
+    Requires authentication — Higyrus validates the Bearer token even on
+    the health probe and returns ``401`` when it is missing. The token
+    is acquired / refreshed transparently by :func:`_request`.
     """
-    url = f"{_base_url}/api/health"
-    resp = _session.get(url, timeout=_REQUEST_TIMEOUT)
-    if not resp.ok:
-        _raise_for_response(resp)
-    return resp.json()
+    raw = _request("GET", "/api/health")
+    assert isinstance(raw, dict)
+    return raw
 
 
 # ------------------------------------------------------------------

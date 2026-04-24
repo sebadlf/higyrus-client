@@ -191,3 +191,22 @@ def test_get_drops_none_params(
 
     call = mock_session.request.call_args
     assert call.kwargs["params"] == {"fechaDesde": "2026-01-01"}
+
+
+def test_get_health_sends_bearer_header(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # /api/health documents a 401 response, so we must hit the
+    # authenticated transport path instead of a bare GET.
+    mock_session.request.return_value = build_response(
+        payload={"status": "UP"},
+        status_code=200,
+    )
+
+    result = _client.get_health()
+
+    assert result == {"status": "UP"}
+    call = mock_session.request.call_args
+    assert call.args == ("GET", "https://api.test/api/health")
+    assert call.kwargs["headers"] == {"Authorization": "Bearer test-token"}
