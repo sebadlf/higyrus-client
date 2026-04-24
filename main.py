@@ -51,43 +51,30 @@ TEST_NIVEL = os.getenv("HIGYRUS_TEST_NIVEL")
 _MOVEMENTS_LOOKBACK_DAYS = 30
 
 
-def _header(title: str) -> None:
-    print()
-    print(f"== {title} ==")
-
-
-def _report_error(where: str, err: Exception) -> None:
-    print(f"  !! {where}: {type(err).__name__}: {err}")
-
-
-def _skip(reason: str) -> None:
-    print(f"  -- skipped: {reason}")
-
-
 def check_health() -> None:
-    _header("GET /api/health")
+    print("\n== GET /api/health ==")
     try:
         status = higyrus.get_health()
     except HigyrusAPIError as err:
-        _report_error("get_health", err)
+        print(f"  !! get_health: {type(err).__name__}: {err}")
         return
     print(f"  ok: {status}")
 
 
 def check_login() -> None:
-    _header("POST /api/login")
+    print("\n== POST /api/login ==")
     try:
         higyrus.login()
     except HigyrusAPIError as err:
-        _report_error("login", err)
+        print(f"  !! login: {type(err).__name__}: {err}")
         return
     print("  ok: token cached for 24 h")
 
 
 def check_posiciones() -> None:
-    _header("GET /api/cuentas/{idCuenta}/posiciones")
+    print("\n== GET /api/cuentas/{idCuenta}/posiciones ==")
     if not TEST_ACCOUNT:
-        _skip("set HIGYRUS_TEST_ACCOUNT_ID to enable")
+        print("  -- skipped: set HIGYRUS_TEST_ACCOUNT_ID to enable")
         return
 
     today = date.today()
@@ -98,7 +85,7 @@ def check_posiciones() -> None:
             incluir_parking=True,
         )
     except HigyrusAPIError as err:
-        _report_error("get_posiciones", err)
+        print(f"  !! get_posiciones: {type(err).__name__}: {err}")
         return
 
     print(f"  {len(posiciones)} posiciones on {today}")
@@ -112,9 +99,9 @@ def check_posiciones() -> None:
 
 
 def check_movimientos() -> None:
-    _header("GET /api/cuentas/{idCuenta}/movimientos")
+    print("\n== GET /api/cuentas/{idCuenta}/movimientos ==")
     if not TEST_ACCOUNT:
-        _skip("set HIGYRUS_TEST_ACCOUNT_ID to enable")
+        print("  -- skipped: set HIGYRUS_TEST_ACCOUNT_ID to enable")
         return
 
     today = date.today()
@@ -126,7 +113,7 @@ def check_movimientos() -> None:
             fecha_hasta=today,
         )
     except HigyrusAPIError as err:
-        _report_error("get_movimientos", err)
+        print(f"  !! get_movimientos: {type(err).__name__}: {err}")
         return
 
     print(f"  {len(movimientos)} movimientos between {desde} and {today}")
@@ -142,12 +129,12 @@ def check_movimientos() -> None:
 
 
 def check_posicion_valuada() -> None:
-    _header("GET /api/cuentas/{idCuenta}/posicionValuada")
+    print("\n== GET /api/cuentas/{idCuenta}/posicionValuada ==")
     if not TEST_ACCOUNT:
-        _skip("set HIGYRUS_TEST_ACCOUNT_ID to enable")
+        print("  -- skipped: set HIGYRUS_TEST_ACCOUNT_ID to enable")
         return
     if not TEST_TIPO_CUENTA or not TEST_NIVEL:
-        _skip("set HIGYRUS_TEST_TIPO_CUENTA and HIGYRUS_TEST_NIVEL to enable")
+        print("  -- skipped: set HIGYRUS_TEST_TIPO_CUENTA and HIGYRUS_TEST_NIVEL to enable")
         return
 
     today = date.today()
@@ -161,7 +148,7 @@ def check_posicion_valuada() -> None:
             hasta=today,
         )
     except HigyrusAPIError as err:
-        _report_error("get_posicion_valuada", err)
+        print(f"  !! get_posicion_valuada: {type(err).__name__}: {err}")
         return
 
     print(f"  {len(valuada)} posiciones valuadas between {desde} and {today}")
