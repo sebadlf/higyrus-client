@@ -13,6 +13,7 @@ Cliente Python para la **API de Higyrus** — API REST para operaciones financie
 - Repo: `github.com/sebadlf/higyrus-client` (local: `~/development/becerra/higyrus-client`)
 - API spec: `documentation/higyrus-docs.pdf` en el repo (también disponible en PageIndex)
 - Linear team: `Becerra` (prefix `BEC`) — https://linear.app/gravity-code/team/BEC
+- Linear project: `Higyrus Client` — https://linear.app/gravity-code/project/higyrus-client-4936c5ae7a62
 - Branch format: `sebadlf-bec-{n}-{descripcion}`
 - Distribución: GitHub Releases (no PyPI), workflow `release.yml` por tag `v*`
 
