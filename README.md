@@ -20,10 +20,10 @@ The client loads credentials from environment variables (or a `.env` file via `p
 
 | Variable | Description |
 |---|---|
-| `HIGYRUS_CLIENT_ID` | Tenant / client identifier (required) |
 | `HIGYRUS_USER` | API username (required) |
 | `HIGYRUS_PASSWORD` | API password (required) |
 | `HIGYRUS_BASE_URL` | Base URL up to the `/api` prefix (required). E.g. `https://cliente.aunesa.com/Irmo` |
+| `HIGYRUS_CLIENT_ID` | Tenant / client identifier (optional; sent as `""` when unset) |
 
 ## Quickstart
 

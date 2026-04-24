@@ -11,11 +11,12 @@ Auth flow:
   subsequent request (OAuth 2.0 style).
 
 Environment variables (loaded from ``.env`` via ``python-dotenv``):
-- ``HIGYRUS_CLIENT_ID`` — tenant / client identifier (required)
 - ``HIGYRUS_USER`` — API username (required)
 - ``HIGYRUS_PASSWORD`` — API password (required)
 - ``HIGYRUS_BASE_URL`` — full base URL up to the ``/api`` prefix,
   e.g. ``https://cliente.aunesa.com/Irmo`` (required)
+- ``HIGYRUS_CLIENT_ID`` — tenant / client identifier (optional; sent as
+  ``""`` when unset for single-tenant installations)
 """
 
 from __future__ import annotations
@@ -73,16 +74,19 @@ def login() -> str:
         raise AuthenticationError(
             0, [{"title": "config", "detail": "HIGYRUS_BASE_URL must be set"}]
         )
-    if not _client_id or not _user or not _password:
+    if not _user or not _password:
         raise AuthenticationError(
             0,
             [
                 {
                     "title": "config",
-                    "detail": "HIGYRUS_CLIENT_ID, HIGYRUS_USER and HIGYRUS_PASSWORD must be set",
+                    "detail": "HIGYRUS_USER and HIGYRUS_PASSWORD must be set",
                 }
             ],
         )
+    # HIGYRUS_CLIENT_ID is optional — tenants without multi-tenancy accept
+    # an empty string. We send the field verbatim (possibly ``""``) so the
+    # server always sees the same shape.
 
     resp = _session.post(
         f"{_base_url}/api/login",

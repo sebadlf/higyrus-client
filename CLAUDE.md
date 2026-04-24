@@ -45,6 +45,7 @@ Environment variables loaded from `.env` via `python-dotenv` (expected):
 - `HIGYRUS_USER` — API username (required)
 - `HIGYRUS_PASSWORD` — API password (required)
 - `HIGYRUS_BASE_URL` — API base URL (required)
+- `HIGYRUS_CLIENT_ID` — tenant identifier (optional; sent as `""` when unset)
 
 ## API Reference
 
