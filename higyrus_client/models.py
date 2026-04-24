@@ -103,6 +103,40 @@ class Parking(SafeModel):
 
 
 @dataclass(frozen=True, slots=True)
+class Movimiento(SafeModel):
+    """Account movement row returned by ``GET /api/cuentas/{idCuenta}/movimientos``.
+
+    See ``documentation/higyrus-docs.pdf`` pp. 26-30. The ``fecha`` field
+    arrives as an ISO 8601 string (e.g. ``"2023-06-28T20:03:18.889Z"``);
+    callers can parse it with :meth:`datetime.datetime.fromisoformat` when
+    needed. ``idMovimientos`` is the list of internal transaction IDs that
+    compose the movement.
+    """
+
+    cuenta: str
+    fechaDesde: str
+    fechaHasta: str
+    tipoTitulo: str
+    tipoTituloAgente: str
+    especie: str
+    simboloLocal: str
+    lugar: str
+    estado: str
+    fecha: str
+    tipoOperacion: str
+    comprobante: str
+    informacion: str
+    subCuenta: str
+    cantidad: int
+    tipoEspecie: str
+    movimiento: str
+    valuacion: float
+    factorizacion: str
+    concepto: str
+    idMovimientos: list[int]
+
+
+@dataclass(frozen=True, slots=True)
 class Posicion(SafeModel):
     """Account position row returned by ``GET /api/cuentas/{idCuenta}/posiciones``.
 
