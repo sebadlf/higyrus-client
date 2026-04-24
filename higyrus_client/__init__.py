@@ -12,6 +12,7 @@ See the README and the in-module docstrings for usage details.
 
 from .client import (
     get_health,
+    get_posiciones,
     login,
 )
 from .exceptions import (
@@ -33,6 +34,8 @@ __all__ = [
     # Auth / health
     "get_health",
     "login",
+    # Cuentas
+    "get_posiciones",
     # Models
     "Parking",
     "Posicion",

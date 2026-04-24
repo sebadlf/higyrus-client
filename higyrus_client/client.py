@@ -22,13 +22,15 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import date, datetime
 from typing import Any
 
 import requests as _requests
 from dotenv import load_dotenv
 
-from ._params import drop_none
+from ._params import drop_none, format_bool, format_date
 from .exceptions import AuthenticationError, AuthorizationError, HigyrusAPIError
+from .models import Posicion
 
 load_dotenv()
 
@@ -203,3 +205,51 @@ def get_health() -> dict[str, Any]:
     if not resp.ok:
         _raise_for_response(resp)
     return resp.json()
+
+
+# ------------------------------------------------------------------
+# Cuentas
+# ------------------------------------------------------------------
+
+
+def get_posiciones(
+    id_cuenta: str,
+    fecha: date | datetime | str,
+    *,
+    especie: str | None = None,
+    incluir_parking: bool = False,
+) -> list[Posicion]:
+    """Return the position summary of an account at a given date.
+
+    Hits ``GET /api/cuentas/{id_cuenta}/posiciones`` — see
+    ``documentation/higyrus-docs.pdf`` pp. 33-36. Requires the Higyrus
+    permission ``[API] Cuenta - Resumen de posiciones``.
+
+    Args:
+        id_cuenta: Account identifier to query.
+        fecha: Snapshot date. ``date`` / ``datetime`` are formatted as
+            ``dd/mm/yyyy``; string values are passed through untouched
+            (the API is the source of truth for format validation).
+        especie: Optional species filter.
+        incluir_parking: Include parking entries under each position
+            (default ``False``).
+
+    Returns:
+        A list of :class:`~higyrus_client.models.Posicion`. Empty list when
+        the API returns ``204 No Content``.
+
+    Raises:
+        AuthenticationError: ``401`` from the API (token missing/invalid).
+        AuthorizationError: ``403`` from the API (caller lacks permission).
+        HigyrusAPIError: Any other non-2xx response.
+    """
+    raw = _get(
+        f"/api/cuentas/{id_cuenta}/posiciones",
+        fecha=format_date(fecha),
+        especie=especie,
+        incluirParking=format_bool(incluir_parking),
+    )
+    if raw is None:
+        return []
+    assert isinstance(raw, list)
+    return [Posicion.from_api(item) for item in raw]
