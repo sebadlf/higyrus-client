@@ -30,7 +30,7 @@ Cliente Python para la **API de Higyrus** — API REST para operaciones financie
 
 ## Notas de dominio
 
-_Pendientes. Al descubrir patrones del dominio (API, permisos, formatos), registrar en `domain/`._
+- [[Convenciones de query params]] — formatos de wire (`dd/mm/yyyy`, `"True"`/`"False"`) y policy de traducción snake_case ↔ camelCase.
 
 ## Runbooks
 
