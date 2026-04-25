@@ -22,18 +22,19 @@ Aparece en:
 
 **Excepción pendiente de validar**: `GET /api/cuentas/{idCuenta}/posiciones` pide una `fecha` pero el PDF no especifica el formato. Hasta que se pruebe contra sandbox, asumimos `dd/mm/yyyy` por consistencia. Actualizar esta nota y el ticket BEC-78 cuando se confirme.
 
-**Helper**: `format_date(value: date | datetime | str | None) -> str | None`
+**Helper**: `format_date(value: date | None) -> str | None`
 
 ```python
 from datetime import date
 from higyrus_client._params import format_date
 
 format_date(date(2026, 4, 23))       # "23/04/2026"
-format_date("23/04/2026")             # "23/04/2026"  (passthrough)
 format_date(None)                      # None          (to be dropped)
 ```
 
-**No validamos client-side**. Si alguien pasa `"not a date"`, la call sale con ese string y el API devuelve 400. Duplicar la validación acá solo agrega un punto de falla sin valor.
+**Strings no se aceptan**. Los wrappers públicos (`get_movimientos`, `get_posiciones`, `get_posicion_valuada`) tipan sus parámetros como `datetime.date`, no `str`. El cliente formatea siempre al wire format y el caller no puede pasar strings ya formateados — así evitamos que dos callers manden distinto shape al API (p. ej. uno con `"23/04/2026"`, otro con `"2026-04-23"`).
+
+El cliente **no valida semánticamente** las fechas (p. ej. `fecha_desde > fecha_hasta` no se chequea). El API es la fuente de verdad y devuelve `400` si el rango es inválido.
 
 ## Booleans
 

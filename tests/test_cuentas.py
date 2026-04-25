@@ -166,19 +166,6 @@ def test_get_movimientos_translates_snake_to_camel(
     assert params["movimiento"] == "Compra contado"
 
 
-def test_get_movimientos_accepts_string_fechas(
-    reset_client_state: None,
-    mock_session: MagicMock,
-) -> None:
-    mock_session.request.return_value = build_response(payload=[], status_code=200)
-
-    get_movimientos("X", "01/04/2026", "23/04/2026")
-
-    params = mock_session.request.call_args.kwargs["params"]
-    assert params["fechaDesde"] == "01/04/2026"
-    assert params["fechaHasta"] == "23/04/2026"
-
-
 def test_get_movimientos_preserves_iso_datetime_string(
     reset_client_state: None,
     mock_session: MagicMock,
@@ -385,19 +372,6 @@ def test_get_posicion_valuada_bool_none_is_dropped(
     assert "actualizar" not in params
 
 
-def test_get_posicion_valuada_accepts_string_fechas(
-    reset_client_state: None,
-    mock_session: MagicMock,
-) -> None:
-    mock_session.request.return_value = build_response(payload=[], status_code=200)
-
-    get_posicion_valuada("X", "COMITENTE", "DETALLE", "01/04/2026", "23/04/2026")
-
-    params = mock_session.request.call_args.kwargs["params"]
-    assert params["desde"] == "01/04/2026"
-    assert params["hasta"] == "23/04/2026"
-
-
 def test_get_posicion_valuada_partial_payload_uses_safe_defaults(
     reset_client_state: None,
     mock_session: MagicMock,
@@ -529,18 +503,6 @@ def test_get_posiciones_incluir_parking_true_serializes_as_capitalized(
 
     params = mock_session.request.call_args.kwargs["params"]
     assert params["incluirParking"] == "True"
-
-
-def test_get_posiciones_accepts_string_fecha(
-    reset_client_state: None,
-    mock_session: MagicMock,
-) -> None:
-    mock_session.request.return_value = build_response(payload=[], status_code=200)
-
-    get_posiciones("X", "23/04/2026")
-
-    params = mock_session.request.call_args.kwargs["params"]
-    assert params["fecha"] == "23/04/2026"
 
 
 def test_get_posiciones_parses_parking_entries(

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
 import requests as _requests
@@ -218,8 +218,8 @@ def get_health() -> dict[str, Any]:
 
 def get_movimientos(
     id_cuenta: str,
-    fecha_desde: date | datetime | str,
-    fecha_hasta: date | datetime | str,
+    fecha_desde: date,
+    fecha_hasta: date,
     *,
     especie: str | None = None,
     tipo_titulo: str | None = None,
@@ -235,10 +235,10 @@ def get_movimientos(
 
     Args:
         id_cuenta: Account identifier to query.
-        fecha_desde: Start of the date range (inclusive). ``date`` /
-            ``datetime`` are formatted as ``dd/mm/yyyy``; strings are
-            passed through untouched.
-        fecha_hasta: End of the date range (inclusive), same semantics.
+        fecha_desde: Start of the date range (inclusive). Must be a
+            :class:`datetime.date` (``datetime`` also accepted as its
+            subclass); the client formats it as ``dd/mm/yyyy``.
+        fecha_hasta: End of the date range (inclusive), same type.
         especie: Optional species filter.
         tipo_titulo: Optional security type filter.
         tipo_titulo_agente: Optional agent-side security type filter.
@@ -272,8 +272,8 @@ def get_posicion_valuada(
     id_cuenta: str,
     tipo_cuenta: str,
     nivel: str,
-    desde: date | datetime | str,
-    hasta: date | datetime | str,
+    desde: date,
+    hasta: date,
     *,
     lugar: str | None = None,
     estado: str | None = None,
@@ -295,9 +295,9 @@ def get_posicion_valuada(
         tipo_cuenta: Account type (valores a documentar contra sandbox).
         nivel: Aggregation / detail level (valores a documentar contra
             sandbox).
-        desde: Start of the date range, ``dd/mm/yyyy`` formatting or
-            passthrough string.
-        hasta: End of the date range, same semantics.
+        desde: Start of the date range. Must be a :class:`datetime.date`;
+            the client formats it as ``dd/mm/yyyy``.
+        hasta: End of the date range, same type.
         lugar: Optional venue filter.
         estado: Optional state filter.
         tipo_titulo: Optional security type filter.
@@ -342,7 +342,7 @@ def get_posicion_valuada(
 
 def get_posiciones(
     id_cuenta: str,
-    fecha: date | datetime | str,
+    fecha: date,
     *,
     especie: str | None = None,
     incluir_parking: bool = False,
@@ -355,9 +355,8 @@ def get_posiciones(
 
     Args:
         id_cuenta: Account identifier to query.
-        fecha: Snapshot date. ``date`` / ``datetime`` are formatted as
-            ``dd/mm/yyyy``; string values are passed through untouched
-            (the API is the source of truth for format validation).
+        fecha: Snapshot date. Must be a :class:`datetime.date`; the
+            client formats it as ``dd/mm/yyyy``.
         especie: Optional species filter.
         incluir_parking: Include parking entries under each position
             (default ``False``).
