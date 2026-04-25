@@ -59,6 +59,7 @@ exclude = [
     "higyrus-vault",
     "documentation",
     "tests",
+    "scripts",
     ".github",
     ".claude",
     "main*.py",

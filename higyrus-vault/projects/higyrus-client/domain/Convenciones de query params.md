@@ -20,7 +20,15 @@ Aparece en:
 - `GET /api/contabilidad/registrosContablesResumenDiario` → `fechaDesde`, `fechaHasta`
 - `GET /api/cuentas/saldos/consolidados` → rangos de fechas
 
-**Excepción pendiente de validar**: `GET /api/cuentas/{idCuenta}/posiciones` pide una `fecha` pero el PDF no especifica el formato. Hasta que se pruebe contra sandbox, asumimos `dd/mm/yyyy` por consistencia. Actualizar esta nota y el ticket BEC-78 cuando se confirme.
+**Confirmado contra sandbox el 2026-04-24**: `GET /api/cuentas/{idCuenta}/posiciones` acepta `fecha` en formato `dd/mm/yyyy`. Sin excepciones.
+
+**Formato de `fecha` en respuestas**: diferente por endpoint, **nunca ISO 8601**:
+
+- `/posiciones` → `fecha` / `fechaPrecio` como `"dd/mm/yyyy"`.
+- `/movimientos` → `fecha` como `"dd/mm/yyyy HH:MM:SS"`; `fechaDesde` / `fechaHasta` / `fechaConcertacion` como `"dd/mm/yyyy"` (o `null`).
+- `/posicionValuada` → `fechaCotizacion` como `"dd/mm/yyyy"`; `fecha` llega como `null`.
+
+Los modelos guardan estos strings verbatim. Si el caller necesita parsearlos a `datetime`, lo hace en su código — el cliente no hace parseo. No hay consistencia entre endpoints sobre qué fecha incluye hora, entonces no tiene sentido generalizar.
 
 **Helper**: `format_date(value: date | None) -> str | None`
 

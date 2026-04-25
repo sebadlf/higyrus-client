@@ -94,15 +94,21 @@ class PosicionValuada(SafeModel):
     """Valued position row returned by ``GET /api/cuentas/{idCuenta}/posicionValuada``.
 
     See ``documentation/higyrus-docs.pdf`` pp. 49-52. Shape-compatible with
-    the multi-account endpoint ``POST /api/cuentas/posicionValuada``.
+    the multi-account endpoint ``POST /api/cuentas/posicionValuada``
+    (p. 103+), which additionally surfaces ``idMovimiento`` — already
+    included here so the same model covers both endpoints.
 
-    Note: the PDF renders some response keys with Spanish accents
-    (``información``, ``fechaCotización``, ``valuación``, ``sesión``),
-    which is inconsistent with every other endpoint in the spec (where
-    keys are ASCII: ``informacion``, ``fechaPrecio``, ``precioUnitario``).
-    We treat the accents as a doc/OCR artifact and mirror the rest of the
-    API. If the live service actually emits accented keys, add a second
-    pass of aliases in ``from_api`` — do not rename these fields.
+    Verified against sandbox on 2026-04-24:
+
+    - The PDF renders some keys with Spanish accents (``información``,
+      ``fechaCotización``, ``valuación``, ``sesión``). The live wire
+      uses **ASCII without accents** on every key, so those four were
+      always doc/OCR artifacts and this model is already correct.
+    - ``cantidad`` arrives as a float (e.g. ``-2788.35``). Modeled as
+      ``float``.
+    - ``tipoTitulo``, ``monedaCotizacion`` and ``idMovimiento`` are
+      extra keys not documented in the PDF for this endpoint but
+      present on every row; added here.
     """
 
     cuenta: str
@@ -114,7 +120,7 @@ class PosicionValuada(SafeModel):
     fecha: str
     comprobante: str
     informacion: str
-    cantidad: int
+    cantidad: float
     fechaCotizacion: str
     precio: float
     valuacion: float
@@ -123,6 +129,9 @@ class PosicionValuada(SafeModel):
     mercado: str
     segmento: str
     sesion: str
+    tipoTitulo: str
+    monedaCotizacion: str
+    idMovimiento: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,16 +151,24 @@ class Parking(SafeModel):
 class Movimiento(SafeModel):
     """Account movement row returned by ``GET /api/cuentas/{idCuenta}/movimientos``.
 
-    See ``documentation/higyrus-docs.pdf`` pp. 26-30. The ``fecha`` field
-    arrives as an ISO 8601 string (e.g. ``"2023-06-28T20:03:18.889Z"``);
-    callers can parse it with :meth:`datetime.datetime.fromisoformat` when
-    needed. ``idMovimientos`` is the list of internal transaction IDs that
-    compose the movement.
+    See ``documentation/higyrus-docs.pdf`` pp. 26-30. Verified against
+    sandbox on 2026-04-24.
+
+    Notes on wire shape discovered at that verification:
+
+    - ``fecha`` and ``fechaConcertacion`` are not ISO 8601 despite the
+      PDF stub; they come as ``"dd/mm/yyyy HH:MM:SS"`` / ``"dd/mm/yyyy"``
+      (or ``null``). Stored verbatim; no client-side parsing.
+    - ``cantidad`` arrives as a float (e.g. ``-21936.48``) even though
+      the PDF labels it as ``0`` (implying int). Modeled as ``float``.
+    - ``idMovimientos`` is the list of internal transaction IDs that
+      compose the movement.
     """
 
     cuenta: str
     fechaDesde: str
     fechaHasta: str
+    fechaConcertacion: str
     tipoTitulo: str
     tipoTituloAgente: str
     especie: str
@@ -163,7 +180,7 @@ class Movimiento(SafeModel):
     comprobante: str
     informacion: str
     subCuenta: str
-    cantidad: int
+    cantidad: float
     tipoEspecie: str
     movimiento: str
     valuacion: float
