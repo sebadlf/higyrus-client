@@ -19,18 +19,22 @@ def _movimiento_payload(**overrides: Any) -> dict[str, Any]:
         "cuenta": "123",
         "fechaDesde": "01/04/2026",
         "fechaHasta": "23/04/2026",
+        "fechaConcertacion": "15/04/2026",
         "tipoTitulo": "Accion",
         "tipoTituloAgente": "Accion Local",
         "especie": "YPFD",
         "simboloLocal": "YPFD",
         "lugar": "BYMA",
         "estado": "liquidado",
-        "fecha": "2026-04-15T15:30:00.000Z",
+        # Wire format (verified against sandbox) is "dd/mm/yyyy HH:MM:SS",
+        # not ISO 8601. The model stores it verbatim either way.
+        "fecha": "15/04/2026 15:30:00",
         "tipoOperacion": "COMPRA",
         "comprobante": "BO-001",
         "informacion": "",
         "subCuenta": "01",
-        "cantidad": 50,
+        # cantidad comes as float on the wire (e.g. -21936.48).
+        "cantidad": 50.0,
         "tipoEspecie": "ACCION",
         "movimiento": "Compra contado",
         "valuacion": 7500.0,
@@ -50,10 +54,11 @@ def _posicion_valuada_payload(**overrides: Any) -> dict[str, Any]:
         "lugar": "BYMA",
         "estado": "vigente",
         "uso": "",
-        "fecha": "2026-04-15T15:30:00.000Z",
+        "fecha": "15/04/2026 15:30:00",
         "comprobante": "BO-001",
         "informacion": "",
-        "cantidad": 100,
+        # cantidad comes as float on the wire (e.g. -2788.35).
+        "cantidad": 100.0,
         "fechaCotizacion": "23/04/2026",
         "precio": 150.0,
         "valuacion": 15000.0,
@@ -62,6 +67,9 @@ def _posicion_valuada_payload(**overrides: Any) -> dict[str, Any]:
         "mercado": "BYMA",
         "segmento": "CPA",
         "sesion": "PRIN",
+        "tipoTitulo": "Accion",
+        "monedaCotizacion": "ARS",
+        "idMovimiento": "MV-001",
     }
     base.update(overrides)
     return base
@@ -166,20 +174,21 @@ def test_get_movimientos_translates_snake_to_camel(
     assert params["movimiento"] == "Compra contado"
 
 
-def test_get_movimientos_preserves_iso_datetime_string(
+def test_get_movimientos_preserves_wire_datetime_string(
     reset_client_state: None,
     mock_session: MagicMock,
 ) -> None:
-    # The response `fecha` field arrives as ISO 8601 — the model stores it
-    # verbatim; we do not reformat.
+    # The wire `fecha` field is "dd/mm/yyyy HH:MM:SS" (verified against
+    # sandbox) — the model stores it verbatim. We do not reformat or
+    # parse it into a datetime.
     mock_session.request.return_value = build_response(
-        payload=[_movimiento_payload(fecha="2026-04-15T15:30:00.123Z")],
+        payload=[_movimiento_payload(fecha="25/03/2026 00:00:00")],
         status_code=200,
     )
 
     result = get_movimientos("X", date(2026, 4, 1), date(2026, 4, 23))
 
-    assert result[0].fecha == "2026-04-15T15:30:00.123Z"
+    assert result[0].fecha == "25/03/2026 00:00:00"
 
 
 def test_get_movimientos_tolerates_empty_id_movimientos(
