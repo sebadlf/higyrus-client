@@ -19,25 +19,22 @@ See the corresponding domain note in the vault:
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
 __all__ = ["drop_none", "format_bool", "format_date"]
 
 
-def format_date(value: date | datetime | str | None) -> str | None:
+def format_date(value: date | None) -> str | None:
     """Serialize ``value`` as ``dd/mm/yyyy`` for Higyrus date params.
 
-    ``date``/``datetime`` are formatted; already-formatted strings pass
-    through untouched (we trust the caller and the API to reject bad
-    formats); ``None`` stays ``None`` so the param is dropped later.
+    Accepts :class:`datetime.date` (or its subclass :class:`datetime.datetime`)
+    and ``None``. Strings are **not** accepted — the client always owns
+    the formatting so the wire shape stays consistent.
     """
     if value is None:
         return None
-    # datetime is a subclass of date — a single isinstance covers both.
-    if isinstance(value, date):
-        return value.strftime("%d/%m/%Y")
-    return value
+    return value.strftime("%d/%m/%Y")
 
 
 def format_bool(value: bool | None) -> str | None:

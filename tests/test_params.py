@@ -21,15 +21,6 @@ def test_format_date_zero_pads_day_and_month() -> None:
     assert format_date(date(2026, 1, 5)) == "05/01/2026"
 
 
-def test_format_date_passes_through_formatted_string() -> None:
-    assert format_date("23/04/2026") == "23/04/2026"
-
-
-def test_format_date_passes_through_malformed_string() -> None:
-    # We do not validate client-side; the API is the source of truth.
-    assert format_date("not a date") == "not a date"
-
-
 def test_format_date_none_returns_none() -> None:
     assert format_date(None) is None
 
