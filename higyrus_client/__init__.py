@@ -12,6 +12,7 @@ See the README and the in-module docstrings for usage details.
 
 from .client import (
     get_health,
+    get_listado_cuentas,
     get_movimientos,
     get_posicion_valuada,
     get_posiciones,
@@ -23,11 +24,21 @@ from .exceptions import (
     HigyrusAPIError,
 )
 from .models import (
+    Administrador,
+    Agente,
+    Cuenta,
+    CuentaBancaria,
+    DisposicionesGenerales,
+    Domicilio,
+    MedioComunicacion,
     Movimiento,
+    Operador,
     Parking,
+    PersonaRelacionada,
     Posicion,
     PosicionValuada,
     SafeModel,
+    Sucursal,
 )
 
 __all__ = [
@@ -39,13 +50,24 @@ __all__ = [
     "get_health",
     "login",
     # Cuentas
+    "get_listado_cuentas",
     "get_movimientos",
     "get_posicion_valuada",
     "get_posiciones",
     # Models
+    "Administrador",
+    "Agente",
+    "Cuenta",
+    "CuentaBancaria",
+    "DisposicionesGenerales",
+    "Domicilio",
+    "MedioComunicacion",
     "Movimiento",
+    "Operador",
     "Parking",
+    "PersonaRelacionada",
     "Posicion",
     "PosicionValuada",
     "SafeModel",
+    "Sucursal",
 ]

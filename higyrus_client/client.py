@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 
 from ._params import drop_none, format_bool, format_date
 from .exceptions import AuthenticationError, AuthorizationError, HigyrusAPIError
-from .models import Movimiento, Posicion, PosicionValuada
+from .models import Cuenta, Movimiento, Posicion, PosicionValuada
 
 load_dotenv()
 
@@ -338,6 +338,56 @@ def get_posicion_valuada(
         return []
     assert isinstance(raw, list)
     return [PosicionValuada.from_api(item) for item in raw]
+
+
+def get_listado_cuentas(
+    *,
+    id_cuenta: list[str] | None = None,
+    tipo_cuenta: str | None = None,
+    estado: str | None = None,
+    fecha_desde: date | None = None,
+    fecha_hasta: date | None = None,
+) -> list[Cuenta]:
+    """Return the full account listing, optionally filtered.
+
+    Hits ``GET /api/cuentas/listadoCuentas`` — see
+    ``documentation/higyrus-docs.pdf`` pp. 79-83. Requires the Higyrus
+    permission ``[API] Cuenta - Listado de Cuentas``.
+
+    All parameters are optional; calling without filters returns every
+    account visible to the configured user (subject to permissions).
+
+    Args:
+        id_cuenta: Restrict to specific account IDs. Each entry is sent as
+            a repeated ``idCuenta`` query parameter
+            (``?idCuenta=1&idCuenta=2``).
+        tipo_cuenta: Account type filter (e.g. ``comitente``, ``agente``).
+        estado: Account state filter (``alta`` / ``prealta`` / ``baja``).
+        fecha_desde: Lower bound on the account creation date (alta de
+            legajo). :class:`datetime.date`; serialized as ``dd/mm/yyyy``.
+        fecha_hasta: Upper bound on the account creation date.
+
+    Returns:
+        A list of :class:`~higyrus_client.models.Cuenta`. Empty list when
+        the API returns ``204 No Content``.
+
+    Raises:
+        AuthenticationError: ``401`` from the API (token missing/invalid).
+        AuthorizationError: ``403`` from the API (caller lacks permission).
+        HigyrusAPIError: Any other non-2xx response.
+    """
+    raw = _get(
+        "/api/cuentas/listadoCuentas",
+        idCuenta=id_cuenta,
+        tipoCuenta=tipo_cuenta,
+        estado=estado,
+        fechaDesde=format_date(fecha_desde),
+        fechaHasta=format_date(fecha_hasta),
+    )
+    if raw is None:
+        return []
+    assert isinstance(raw, list)
+    return [Cuenta.from_api(item) for item in raw]
 
 
 def get_posiciones(

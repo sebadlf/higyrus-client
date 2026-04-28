@@ -219,3 +219,154 @@ class Posicion(SafeModel):
     fechaPrecio: str
     informacion: str
     parking: list[Parking]
+
+
+# ---------------------------------------------------------------------------
+# /api/cuentas/listadoCuentas
+#
+# Field names are modeled in ASCII without diacritics. The PDF (pp. 79-83)
+# renders some keys with Spanish accents (``categoría``, ``denominación``,
+# ``autorización``, ``derivación``, ``vinculación``, ``país``, ``dirección``)
+# but the same artifact pattern appeared in ``PosicionValuada`` and the live
+# wire turned out to use ASCII. Pending sandbox verification — if any field
+# stays empty in real responses, re-check the wire key.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class DisposicionesGenerales(SafeModel):
+    """``disposicionesGenerales`` block nested inside :class:`Cuenta`."""
+
+    vigenciaDesde: str
+    vigenciaHasta: str
+    condicionesGenerales: str
+    autorizacionGeneral: str
+    fondosDisponibles: str
+    cuentaFCI: str
+    derivacionBYMA: str
+    instruccionesFondos: str
+    tipoCliente: str
+    horizonteInversion: str
+    perfilInversion: str
+    actividadEsperada: str
+    operatoria: str
+    vinculacionAgente: str
+    derivacionMAV: str
+
+
+@dataclass(frozen=True, slots=True)
+class Domicilio(SafeModel):
+    """Address entry inside :class:`Cuenta` ``domicilios``."""
+
+    uso: str
+    pais: str
+    provincia: str
+    codigoPostal: str
+    ciudad: str
+    direccion: str
+
+
+@dataclass(frozen=True, slots=True)
+class PersonaRelacionada(SafeModel):
+    """Related-person entry inside :class:`Cuenta` ``personasRelacionadas``."""
+
+    tipoRelacion: str
+    persona: str
+    tipoId: str
+    id: str
+    orden: str
+    desde: str
+    hasta: str
+    realizarSeguimiento: str
+    limitaAccesoCuenta: str
+    participacionFondeo: str
+    descripcion: str
+    limitaOperacion: str
+    limitaExtraccion: str
+
+
+@dataclass(frozen=True, slots=True)
+class MedioComunicacion(SafeModel):
+    """Communication method entry inside :class:`Cuenta` ``mediosComunicacion``."""
+
+    tipo: str
+    medio: str
+    vigenciaDesde: str
+    vigenciaHasta: str
+    uso: str
+    principal: str
+    notas: str
+
+
+@dataclass(frozen=True, slots=True)
+class CuentaBancaria(SafeModel):
+    """Bank account entry inside :class:`Cuenta` ``cuentasBancarias``."""
+
+    cbu: str
+    banco: str
+    moneda: str
+    vigenteDesde: str
+    vigenteHasta: str
+
+
+@dataclass(frozen=True, slots=True)
+class Agente(SafeModel):
+    """Agent reference inside :class:`Administrador`."""
+
+    codigo: str
+    denominacion: str
+
+
+@dataclass(frozen=True, slots=True)
+class Operador(SafeModel):
+    """Operator reference inside :class:`Administrador`."""
+
+    nombre: str
+    nombreReal: str
+    idExterno: str
+
+
+@dataclass(frozen=True, slots=True)
+class Sucursal(SafeModel):
+    """Branch reference inside :class:`Administrador`."""
+
+    codigo: str
+    denominacion: str
+
+
+@dataclass(frozen=True, slots=True)
+class Administrador(SafeModel):
+    """``administrador`` block nested inside :class:`Cuenta`."""
+
+    agente: Agente
+    operador: Operador
+    sucursal: Sucursal
+
+
+@dataclass(frozen=True, slots=True)
+class Cuenta(SafeModel):
+    """Account row returned by ``GET /api/cuentas/listadoCuentas``.
+
+    See ``documentation/higyrus-docs.pdf`` pp. 79-83. Mirrors the fields
+    surfaced by the "Administración de cuentas" window in the Higyrus
+    desktop client.
+    """
+
+    id: str
+    tipo: str
+    cartera: str
+    categoria: str
+    clase: str
+    fechaAlta: str
+    denominacion: str
+    alias: str
+    titular: str
+    tipoTitular: str
+    estado: str
+    nota: str
+    disposicionesGenerales: DisposicionesGenerales
+    domicilios: list[Domicilio]
+    personasRelacionadas: list[PersonaRelacionada]
+    mediosComunicacion: list[MedioComunicacion]
+    cuentasBancarias: list[CuentaBancaria]
+    administrador: Administrador
