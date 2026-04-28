@@ -8,9 +8,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from higyrus_client.client import get_movimientos, get_posicion_valuada, get_posiciones
+from higyrus_client.client import (
+    get_listado_cuentas,
+    get_movimientos,
+    get_posicion_valuada,
+    get_posiciones,
+)
 from higyrus_client.exceptions import AuthorizationError, HigyrusAPIError
-from higyrus_client.models import Movimiento, Posicion, PosicionValuada
+from higyrus_client.models import Cuenta, Movimiento, Posicion, PosicionValuada
 from tests.conftest import build_response
 
 
@@ -575,5 +580,230 @@ def test_get_posiciones_400_raises_base_error(
 
     with pytest.raises(HigyrusAPIError) as exc:
         get_posiciones("X", date(2026, 4, 23))
+
+    assert exc.value.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# get_listado_cuentas
+# ---------------------------------------------------------------------------
+
+
+def _cuenta_payload(**overrides: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "id": "123",
+        "tipo": "comitente",
+        "cartera": "C1",
+        "categoria": "minorista",
+        "clase": "individuo",
+        "fechaAlta": "01/03/2026",
+        "denominacion": "PEREZ JUAN",
+        "alias": "JP",
+        "titular": "PEREZ JUAN",
+        "tipoTitular": "fisica",
+        "estado": "alta",
+        "nota": "",
+        "disposicionesGenerales": {
+            "vigenciaDesde": "01/03/2026",
+            "vigenciaHasta": "01/03/2027",
+            "condicionesGenerales": "OK",
+            "autorizacionGeneral": "Si",
+            "fondosDisponibles": "Propios",
+            "cuentaFCI": "No",
+            "derivacionBYMA": "No",
+            "instruccionesFondos": "Cuenta bancaria",
+            "tipoCliente": "Minorista",
+            "horizonteInversion": "Largo",
+            "perfilInversion": "Conservador",
+            "actividadEsperada": "Inversion",
+            "operatoria": "Plena",
+            "vinculacionAgente": "Cliente",
+            "derivacionMAV": "No",
+        },
+        "domicilios": [
+            {
+                "uso": "real",
+                "pais": "ARG",
+                "provincia": "Santa Fe",
+                "codigoPostal": "S2000",
+                "ciudad": "Rosario",
+                "direccion": "Paraguay 777",
+            }
+        ],
+        "personasRelacionadas": [
+            {
+                "tipoRelacion": "titular",
+                "persona": "PEREZ JUAN",
+                "tipoId": "DNI",
+                "id": "12345678",
+                "orden": "1",
+                "desde": "01/03/2026",
+                "hasta": "",
+                "realizarSeguimiento": "Si",
+                "limitaAccesoCuenta": "No",
+                "participacionFondeo": "100",
+                "descripcion": "",
+                "limitaOperacion": "No",
+                "limitaExtraccion": "No",
+            }
+        ],
+        "mediosComunicacion": [
+            {
+                "tipo": "email",
+                "medio": "juan@example.com",
+                "vigenciaDesde": "01/03/2026",
+                "vigenciaHasta": "",
+                "uso": "principal",
+                "principal": "Si",
+                "notas": "",
+            }
+        ],
+        "cuentasBancarias": [
+            {
+                "cbu": "0170123456789012345678",
+                "banco": "Frances",
+                "moneda": "ARS",
+                "vigenteDesde": "01/03/2026",
+                "vigenteHasta": "",
+            }
+        ],
+        "administrador": {
+            "agente": {"codigo": "A01", "denominacion": "Aunesa"},
+            "operador": {
+                "nombre": "operador1",
+                "nombreReal": "Operador Uno",
+                "idExterno": "OP-1",
+            },
+            "sucursal": {"codigo": "S01", "denominacion": "Rosario"},
+        },
+    }
+    base.update(overrides)
+    return base
+
+
+def test_get_listado_cuentas_happy_path(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload=[_cuenta_payload(), _cuenta_payload(id="456")],
+        status_code=200,
+    )
+
+    result = get_listado_cuentas()
+
+    assert len(result) == 2
+    assert all(isinstance(c, Cuenta) for c in result)
+    assert result[0].id == "123"
+    assert result[1].id == "456"
+    assert result[0].domicilios[0].direccion == "Paraguay 777"
+    assert result[0].administrador.agente.denominacion == "Aunesa"
+    assert result[0].cuentasBancarias[0].cbu == "0170123456789012345678"
+
+
+def test_get_listado_cuentas_204_returns_empty_list(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(status_code=204)
+
+    assert get_listado_cuentas() == []
+
+
+def test_get_listado_cuentas_url_and_no_filters(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_listado_cuentas()
+
+    call = mock_session.request.call_args
+    assert call.args == ("GET", "https://api.test/api/cuentas/listadoCuentas")
+    # Sin filtros, todos los params son None y deben caer por drop_none.
+    assert call.kwargs["params"] == {}
+
+
+def test_get_listado_cuentas_translates_snake_to_camel(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_listado_cuentas(
+        tipo_cuenta="comitente",
+        estado="alta",
+        fecha_desde=date(2026, 1, 1),
+        fecha_hasta=date(2026, 4, 23),
+    )
+
+    params = mock_session.request.call_args.kwargs["params"]
+    assert params == {
+        "tipoCuenta": "comitente",
+        "estado": "alta",
+        "fechaDesde": "01/01/2026",
+        "fechaHasta": "23/04/2026",
+    }
+
+
+def test_get_listado_cuentas_id_cuenta_passed_as_list_for_repeated_param(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # ``requests`` serializes list values as repeated query params:
+    # ?idCuenta=111&idCuenta=123. Verified by passing the list straight
+    # through without flattening.
+    mock_session.request.return_value = build_response(payload=[], status_code=200)
+
+    get_listado_cuentas(id_cuenta=["111", "123", "1234"])
+
+    params = mock_session.request.call_args.kwargs["params"]
+    assert params == {"idCuenta": ["111", "123", "1234"]}
+
+
+def test_get_listado_cuentas_partial_payload_uses_safe_defaults(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    # Si faltan los nested objetos / listas, SafeModel cae a defaults
+    # vacios — encadenar atributos no debe romper.
+    payload = _cuenta_payload()
+    del payload["disposicionesGenerales"]
+    del payload["domicilios"]
+    del payload["administrador"]
+    mock_session.request.return_value = build_response(payload=[payload], status_code=200)
+
+    result = get_listado_cuentas()
+
+    assert result[0].disposicionesGenerales.tipoCliente == ""
+    assert result[0].domicilios == []
+    assert result[0].administrador.agente.codigo == ""
+    assert result[0].administrador.operador.nombre == ""
+
+
+def test_get_listado_cuentas_403_raises_authorization_error(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload={"errors": [{"title": "forbidden", "detail": "missing permission"}]},
+        status_code=403,
+    )
+
+    with pytest.raises(AuthorizationError):
+        get_listado_cuentas()
+
+
+def test_get_listado_cuentas_400_raises_base_error(
+    reset_client_state: None,
+    mock_session: MagicMock,
+) -> None:
+    mock_session.request.return_value = build_response(
+        payload={"errors": [{"title": "bad_request", "detail": "estado invalido"}]},
+        status_code=400,
+    )
+
+    with pytest.raises(HigyrusAPIError) as exc:
+        get_listado_cuentas(estado="ZZZ")
 
     assert exc.value.status_code == 400
